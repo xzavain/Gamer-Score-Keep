@@ -147,13 +147,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 app.post('/api/auth/register', (req, res) => {
   const db = getDb();
-  const { email, password, display_name, avatar_emoji, avatar_color } = req.body || {};
+  const { email, password, display_name, avatar_emoji, avatar_color, remember_me } = req.body || {};
   const cleanEmail = String(email || '').trim().toLowerCase();
-  if (!EMAIL_RE.test(cleanEmail)) return res.status(400).json({ error: 'Invalid email address' });
-  if (String(password || '').length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  if (!EMAIL_RE.test(cleanEmail)) return res.status(400).json({ error: 'Please enter a valid email address' });
+  if (String(password || '').length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
   if (!String(display_name || '').trim()) return res.status(400).json({ error: 'Display name is required' });
   if (db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail)) {
-    return res.status(409).json({ error: 'Email already registered' });
+    return res.status(409).json({ error: 'That email is already registered — try logging in instead' });
   }
   const now = Date.now();
   const info = db.prepare(`
@@ -162,14 +162,15 @@ app.post('/api/auth/register', (req, res) => {
       cleanEmail, hashPassword(password), String(display_name).trim(),
       String(avatar_emoji || '🎮').slice(0, 16), String(avatar_color || '#6366F1').slice(0, 16), now);
   const token = newToken();
+  const expiresAt = expiryFor(!!remember_me);
   db.prepare('INSERT INTO auth_tokens (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)')
-    .run(token, info.lastInsertRowid, now, expiryFor(false));
-  res.status(201).json({ token, user: publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid)) });
+    .run(token, info.lastInsertRowid, now, expiresAt);
+  res.status(201).json({ token, expires_at: expiresAt, user: publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid)) });
 });
 
 app.post('/api/auth/login', (req, res) => {
   const db = getDb();
-  const { email, password } = req.body || {};
+  const { email, password, remember_me } = req.body || {};
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(String(email || '').trim().toLowerCase());
   if (!user || !verifyPassword(password, user.password_hash)) {
     return res.status(401).json({ error: 'Invalid email or password' });
@@ -177,9 +178,10 @@ app.post('/api/auth/login', (req, res) => {
   cleanExpiredTokens(db);
   const now = Date.now();
   const token = newToken();
+  const expiresAt = expiryFor(!!remember_me);
   db.prepare('INSERT INTO auth_tokens (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)')
-    .run(token, user.id, now, expiryFor(false));
-  res.json({ token, user: publicUser(user) });
+    .run(token, user.id, now, expiresAt);
+  res.json({ token, expires_at: expiresAt, user: publicUser(user) });
 });
 
 app.post('/api/auth/logout', requireAuth, (req, res) => {
@@ -191,6 +193,95 @@ app.get('/api/me', requireAuth, (req, res) => {
   const user = getDb().prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   res.json({ user: publicUser(user) });
+});
+
+/* Update own profile: display name + avatar. */
+app.put('/api/me', requireAuth, (req, res) => {
+  const db = getDb();
+  const b = req.body || {};
+  const updates = {};
+  if (b.display_name !== undefined) {
+    const name = String(b.display_name).trim();
+    if (!name) return res.status(400).json({ error: 'Display name is required' });
+    updates.display_name = name.slice(0, 60);
+  }
+  if (b.avatar_emoji !== undefined) updates.avatar_emoji = String(b.avatar_emoji).slice(0, 16) || '🎮';
+  if (b.avatar_color !== undefined) {
+    const c = String(b.avatar_color).trim();
+    if (!/^#[0-9a-fA-F]{6}$/.test(c)) return res.status(400).json({ error: 'Avatar color must be a hex color like #6366F1' });
+    updates.avatar_color = c;
+  }
+  const keys = Object.keys(updates);
+  if (!keys.length) return res.status(400).json({ error: 'Nothing to update' });
+  db.prepare(`UPDATE users SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`)
+    .run(...keys.map((k) => updates[k]), req.userId);
+  res.json({ user: publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId)) });
+});
+
+/* Change own password. Other sessions are signed out. */
+app.put('/api/me/password', requireAuth, (req, res) => {
+  const db = getDb();
+  const { current_password, new_password } = req.body || {};
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
+  if (!user || !verifyPassword(current_password, user.password_hash)) {
+    return res.status(401).json({ error: 'Current password is incorrect' });
+  }
+  if (String(new_password || '').length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters' });
+  }
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(new_password), req.userId);
+  db.prepare('DELETE FROM auth_tokens WHERE user_id = ? AND token != ?').run(req.userId, req.token);
+  res.json({ ok: true });
+});
+
+/* ---- Forgot / reset password (no SMTP on self-hosted: reset link shown on-screen) ---- */
+
+const RESET_TTL_MS = 60 * 60 * 1000;
+
+app.post('/api/auth/forgot', (req, res) => {
+  const db = getDb();
+  const email = String((req.body || {}).email || '').trim().toLowerCase();
+  const msg = 'If an account exists for that email, a password reset link has been created.';
+  if (!EMAIL_RE.test(email)) return res.json({ message: msg });
+  const user = db.prepare('SELECT id, email FROM users WHERE email = ?').get(email);
+  if (!user) return res.json({ message: msg });
+  cleanExpiredTokens(db);
+  const now = Date.now();
+  const token = newToken();
+  db.prepare('INSERT INTO password_resets (token, user_id, created_at, expires_at, used) VALUES (?, ?, ?, ?, 0)')
+    .run(token, user.id, now, now + RESET_TTL_MS);
+  const path = `/#/reset/${token}`;
+  console.log(`[password-reset] user=${user.email} id=${user.id} link=${path}`);
+  res.json({ message: msg, reset_path: path });
+});
+
+app.get('/api/auth/reset/:token', (req, res) => {
+  const db = getDb();
+  const row = db.prepare('SELECT * FROM password_resets WHERE token = ?').get(String(req.params.token || ''));
+  if (!row || row.used || row.expires_at < Date.now()) {
+    return res.status(400).json({ error: 'This reset link is invalid or has expired' });
+  }
+  res.json({ valid: true });
+});
+
+app.post('/api/auth/reset', (req, res) => {
+  const db = getDb();
+  const { token, password } = req.body || {};
+  const row = db.prepare('SELECT * FROM password_resets WHERE token = ?').get(String(token || ''));
+  if (!row || row.used || row.expires_at < Date.now()) {
+    return res.status(400).json({ error: 'This reset link is invalid or has expired' });
+  }
+  if (String(password || '').length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+  const now = Date.now();
+  db.transaction(() => {
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(password), row.user_id);
+    db.prepare('UPDATE password_resets SET used = 1 WHERE token = ?').run(row.token);
+    db.prepare('DELETE FROM auth_tokens WHERE user_id = ?').run(row.user_id);
+  })();
+  console.log(`[password-reset] password changed for user_id=${row.user_id}; all sessions revoked`);
+  res.json({ ok: true });
 });
 
 /* ---------------- Families ---------------- */

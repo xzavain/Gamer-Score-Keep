@@ -48,6 +48,15 @@ On first boot the database seeds a demo workspace:
 ## Features
 
 - **Auth & families** — email/password accounts, 6-digit family room codes to join, switch between families, rename families.
+
+### Accounts
+
+Every family member signs in with their own account — joining a family with a room code never creates a shared account.
+
+- **Sign up**: display name, email, password (8+ characters with a live strength hint), and an optional family room code that joins you to that family immediately. Duplicate emails are rejected with a friendly message; you're signed in right after registering.
+- **Log in**: email + password with **Remember me** (checked by default — keeps you signed in for 30 days instead of 12 hours). Clean error messages; expired sessions land back on the login screen, never a stuck state.
+- **Forgot password**: enter your email and the app generates a one-time reset link (valid 1 hour). This is a self-hosted family app with no email server, so the link is shown on-screen with a copy button — share it with the family member — and it's also logged server-side. The response message is identical whether or not the email exists.
+- **My Account** (avatar button, top-right): change your display name, pick an avatar emoji + color, change your password (current password required; other devices are signed out), or log out.
 - **Game presets** — Mexican Train Dominoes, Bingo, Uno, Uno No Mercy, Monopoly, Scrabble, Yahtzee, Golf, Hearts, plus fully custom games. Each preset carries its own emoji, accent color, scoring defaults, and scorekeeper hints (all defined in one `GAME_THEMES` map in `public/js/themes.js`, so new presets are styled automatically).
 - **Core scoring** — multiple simultaneous games, pause/resume; round-by-round grid with running totals *or* quick-tap (+1/+5/+10/custom); highest-wins / lowest-wins with optional target score; dealer & turn rotation with one-tap advance; anyone in the family can take over as scorekeeper. Tap any entered round score to correct it (edits are logged and live-synced).
 - **Mexican Train module** — engine checklist of doubles (Double-9/12/15 sets) rendered as CSS domino pip tiles; tap to mark played and link to a round; out-of-order play supported; quick-pip calculator keypad (1–12) that sums a hand and applies it to a player; personal train open/closed (🚂) toggles.
@@ -70,10 +79,15 @@ Auth uses Bearer tokens (`Authorization: Bearer <token>`); the SSE stream also a
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/auth/register` | Create account → `{token, user}` |
-| POST | `/api/auth/login` | Sign in → `{token, user}` |
+| POST | `/api/auth/register` | Create account → `{token, user}` (min 8-char password, optional `remember_me`) |
+| POST | `/api/auth/login` | Sign in → `{token, user}` (optional `remember_me` = 30-day session) |
 | POST | `/api/auth/logout` | Revoke token |
+| POST | `/api/auth/forgot` | Request password reset → `{message, reset_path?}` (no email enumeration) |
+| GET | `/api/auth/reset/:token` | Validate a reset token |
+| POST | `/api/auth/reset` | Set new password via reset token (single-use, 1h expiry, revokes all sessions) |
 | GET | `/api/me` | Current user |
+| PUT | `/api/me` | Update display name / avatar |
+| PUT | `/api/me/password` | Change password (verifies current, signs out other sessions) |
 | POST | `/api/families` | Create family (generates room code) |
 | POST | `/api/families/join` | Join via `{room_code}` |
 | GET | `/api/families` | My families |
