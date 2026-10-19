@@ -127,6 +127,18 @@ Dockerfile           node:20-alpine
 docker-compose.yml   One-command deploy with persistent ./data
 ```
 
+## Recommended server specs
+
+GamerScore Keep is a lightweight Node + SQLite app — no separate database or services needed.
+
+| | Minimum | Comfortable |
+|---|---|---|
+| CPU | 1 vCPU | 2 vCPU |
+| RAM | 512 MB | 1 GB |
+| Disk | 5 GB | 10 GB |
+
+Any $4–6/month VPS (Hetzner CX11, DigitalOcean Basic, etc.) runs it fine for a family.
+
 ## Deploy with Coolify
 
 Self-host in a few clicks. You need a Coolify instance connected to your server.
