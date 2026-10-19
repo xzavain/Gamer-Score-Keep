@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GamerScore Keep</title>
+<meta name="description" content="GamerScore Keep — family game night scorekeeping, live-synced.">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand" id="brand"><span class="brand-die">🎲</span><span class="brand-name">GamerScore Keep</span></div>
+    <div class="topbar-right">
+      <span id="live-dot" class="live-dot hidden" title="Live sync connected">Live</span>
+      <button id="theme-toggle" class="icon-btn" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <aside id="sidebar">
+    <nav class="side-nav" aria-label="Primary">
+      <button class="nav-item" data-route="#/dashboard"><span class="nav-ico">🏠</span><span>Home</span></button>
+      <button class="nav-item" data-route="#/game-list"><span class="nav-ico">🎮</span><span>Games</span></button>
+      <button class="nav-item" data-route="#/history"><span class="nav-ico">🕘</span><span>History</span></button>
+      <button class="nav-item" data-route="#/leaders"><span class="nav-ico">🏆</span><span>Leaders</span></button>
+      <button class="nav-item" data-route="#/family"><span class="nav-ico">👨‍👩‍👧‍👦</span><span>Family</span></button>
+      <button class="nav-item" data-route="#/toolkit"><span class="nav-ico">🧰</span><span>Toolkit</span></button>
+    </nav>
+  </aside>
+
+  <main id="view" aria-live="polite"></main>
+
+  <nav id="bottomnav" aria-label="Primary">
+    <button class="nav-item" data-route="#/dashboard"><span class="nav-ico">🏠</span><span>Home</span></button>
+    <button class="nav-item" data-route="#/game-list"><span class="nav-ico">🎮</span><span>Games</span></button>
+    <button class="nav-item" data-route="#/history"><span class="nav-ico">🕘</span><span>History</span></button>
+    <button class="nav-item" data-route="#/leaders"><span class="nav-ico">🏆</span><span>Leaders</span></button>
+    <button class="nav-item" data-route="#/toolkit"><span class="nav-ico">🧰</span><span>More</span></button>
+  </nav>
+</div>
+
+<div id="modal-root"></div>
+<div id="sheet-root"></div>
+<div id="toast-root" aria-live="assertive"></div>
+
+<script src="js/app.js"></script>
+<script src="js/themes.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/game.js"></script>
+<script src="js/dominoes.js"></script>
+<script src="js/victory.js"></script>
+<script src="js/history.js"></script>
+<script src="js/leaders.js"></script>
+<script src="js/family.js"></script>
+<script src="js/toolkit.js"></script>
+</body>
+</html>
