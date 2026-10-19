@@ -8,7 +8,7 @@ Dark mode by default (obsidian `#0D0F12`, slate `#161920`, Electric Indigo `#636
 
 | Dashboard | Live scorekeeper |
 |---|---|
-| ![Dashboard — active games, family leaders, recent games](https://files.catbox.moe/7xitee.jpg) | ![Scorekeeper — round grid, engine checklist, quick tap](https://files.catbox.moe/7yt0si.jpg) |
+| ![Dashboard — active games, family leaders, recent games](https://n.uguu.se/rKsQiqQr.jpg) | ![Scorekeeper — round grid, engine checklist, quick tap](https://files.catbox.moe/7yt0si.jpg) |
 | *Game Night dashboard: active game card with live leader, family leaders, and recent games.* | *Mexican Train scorekeeper: round-by-round grid with running totals and ranks, tappable engine domino checklist (double-12 set), and quick-tap scoring buttons.* |
 
 | Leaderboard | Toolkit |
