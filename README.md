@@ -127,6 +127,22 @@ Dockerfile           node:20-alpine
 docker-compose.yml   One-command deploy with persistent ./data
 ```
 
+## Deploy with Coolify
+
+Self-host in a few clicks. You need a Coolify instance connected to your server.
+
+**Option A — from this Git repo (recommended)**
+1. In Coolify: **Projects → your project → Add → Service → Docker Compose**, and point it at this repository.
+2. **Environment variables** — none required. Optionally set `PORT` if you want a different host-side port.
+3. **Persistent storage** — the compose file already declares the `gsk-data` volume mounted at `/app/data` (SQLite database). In Coolify's service → **Storages**, confirm a persistent volume is attached at `/app/data`.
+4. Click **Deploy**. The healthcheck hits `/api/health`; Coolify shows the service healthy when it responds.
+5. Open the app URL — on first boot it seeds a demo family (room code `482916`, logins `maya@demo.local` etc. / `demo1234`). Delete the demo users or change their passwords before exposing the app publicly.
+
+**Option B — plain Docker Compose**
+```bash
+docker compose up -d --build   # http://localhost:3000, data persists in the gsk-data volume
+```
+
 ## Deploy notes
 
 - The SQLite file lives at `data/gamerscore.db` (created + seeded on first boot); back it up before upgrades.

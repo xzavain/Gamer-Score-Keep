@@ -12,6 +12,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+/* Health check for Docker / reverse proxies */
+app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
+
 /* ---------------- Auth helpers ---------------- */
 
 function cleanExpiredTokens(db) {
