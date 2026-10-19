@@ -8,17 +8,17 @@ Dark mode by default (obsidian `#0D0F12`, slate `#161920`, Electric Indigo `#636
 
 | Dashboard | Live scorekeeper |
 |---|---|
-| ![Dashboard — active games, family leaders, recent games](docs/screenshots/shot-dashboard.png) | ![Scorekeeper — round grid, engine checklist, quick tap](docs/screenshots/shot-scorekeeper.png) |
+| ![Dashboard — active games, family leaders, recent games](docs/screenshots/shot-dashboard.jpg) | ![Scorekeeper — round grid, engine checklist, quick tap](docs/screenshots/shot-scorekeeper.jpg) |
 | *Game Night dashboard: active game card with live leader, family leaders, and recent games.* | *Mexican Train scorekeeper: round-by-round grid with running totals and ranks, tappable engine domino checklist (double-12 set), and quick-tap scoring buttons.* |
 
 | Leaderboard | Toolkit |
 |---|---|
-| ![Leaderboard — standings and head-to-head](docs/screenshots/shot-leaderboard.png) | ![Toolkit — spinner, dice, coin flip, timer](docs/screenshots/shot-toolkit.png) |
+| ![Leaderboard — standings and head-to-head](docs/screenshots/shot-leaderboard.jpg) | ![Toolkit — spinner, dice, coin flip, timer](docs/screenshots/shot-toolkit.jpg) |
 | *Standings with wins, win rate, average score and streaks, plus a head-to-head wins matrix.* | *Game-night toolkit: first-player spinner wheel, animated dice roller, coin flip, and round timer with buzzer.* |
 
 | Sign in | Mobile layout |
 |---|---|
-| ![Sign in screen](docs/screenshots/shot-login.png) | ![Mobile dashboard with bottom navigation](docs/screenshots/shot-dashboard-mobile.png) |
+| ![Sign in screen](docs/screenshots/shot-login.jpg) | ![Mobile dashboard with bottom navigation](docs/screenshots/shot-dashboard-mobile.jpg) |
 | *Email + password sign in, then join a family with its 6-digit room code.* | *Phone layout: stacked cards and a bottom tab bar (Home, Games, History, Leaders, More).* |
 
 ## Quick start
